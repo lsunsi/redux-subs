@@ -5,7 +5,8 @@
   "main": "source/index.ts",
   "scripts": {
     "test": "ava",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "tslint"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,9 @@
   "homepage": "https://github.com/lsunsi/redux-subs#readme",
   "dependencies": {
     "typescript": "^2.6.1"
+  },
+  "devDependencies": {
+    "tslint": "^5.8.0",
+    "tslint-xo": "^0.3.0"
   }
 }
