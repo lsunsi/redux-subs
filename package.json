@@ -4,7 +4,8 @@
   "description": "elm subscriptions in redux",
   "main": "source/index.ts",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -22,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/lsunsi/redux-subs/issues"
   },
-  "homepage": "https://github.com/lsunsi/redux-subs#readme"
+  "homepage": "https://github.com/lsunsi/redux-subs#readme",
+  "dependencies": {
+    "typescript": "^2.6.1"
+  }
 }
