@@ -1,0 +1,26 @@
+{
+  "name": "redux-subs",
+  "version": "0.1.0",
+  "description": "elm subscriptions in redux",
+  "main": "source/index.ts",
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lsunsi/redux-subs.git"
+  },
+  "keywords": [
+    "redux",
+    "elm",
+    "subs",
+    "subscriptions",
+    "declarative"
+  ],
+  "author": "lsunsi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lsunsi/redux-subs/issues"
+  },
+  "homepage": "https://github.com/lsunsi/redux-subs#readme"
+}
