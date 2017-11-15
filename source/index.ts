@@ -1,13 +1,33 @@
+type Constant<A> = () => A;
+type Mapper<A, B> = (a: A) => B;
 type Consumer<A> = (a: A) => void;
-type Disable = () => void;
-type Enable<A, B> = (c: Consumer<A>) => B;
-type Sub<A> = Enable<A, Disable>;
-type Subs<A, B> = (a: A) => Sub<B>[];
 
-const Subs = subs => ({dispatch, getState}) => next => {
-	const activeSubs = {};
+type Enable<A> = Consumer<A>;
+type Disable = Constant<void>;
+type Sub<A> = Mapper<Enable<A>, Disable>;
+type Subs<A, B> = Mapper<A, CurrentSubs<B>>;
 
-	return action => {
+interface ActiveSubs {
+	[id: string]: Disable;
+}
+interface CurrentSubs<A> {
+	[id: string]: Sub<A>;
+}
+
+type Next<Action> = Mapper<Action, Action>;
+interface Store<State, Action> {
+	dispatch: Consumer<Action>;
+	getState: Constant<State>;
+}
+
+export default
+	<State, Action>
+	(subs: Subs<State, Action>) =>
+	({dispatch, getState}: Store<State, Action>) =>
+	(next: Next<Action>) => {
+	const activeSubs: ActiveSubs = {};
+
+	return (action: Action) => {
 		const a = next(action);
 
 		const currentSubs = subs(getState());
