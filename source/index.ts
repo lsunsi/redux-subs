@@ -27,6 +27,10 @@ export default
 	(next: Next<Action>) => {
 	const activeSubs: ActiveSubs = {};
 
+	const subscribing = () => {
+		throw new Error('subscribing');
+	};
+
 	return (action: Action) => {
 		const a = next(action);
 
@@ -39,6 +43,10 @@ export default
 				activeSubs[id]();
 				delete activeSubs[id];
 			}
+		});
+
+		Object.keys(currentSubs).forEach(id => {
+			activeSubs[id] = subscribing;
 		});
 
 		Object.keys(currentSubs).forEach(id => {
