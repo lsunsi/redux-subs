@@ -28,13 +28,12 @@
     "url": "https://github.com/lsunsi/redux-subs/issues"
   },
   "homepage": "https://github.com/lsunsi/redux-subs#readme",
-  "dependencies": {
-    "typescript": "^2.6.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "ava": "^0.23.0",
     "redux": "^3.7.2",
     "tslint": "^5.8.0",
-    "tslint-xo": "^0.3.0"
+    "tslint-xo": "^0.3.0",
+    "typescript": "^2.6.1"
   }
 }
