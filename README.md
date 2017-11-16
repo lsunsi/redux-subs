@@ -1,6 +1,8 @@
 # redux-subs
 This package implements the declarative [Subscriptions pattern](https://www.elm-tutorial.org/en/03-subs-cmds/01-subs.html) seen in the [Elm architecture](https://guide.elm-lang.org/architecture/) to be used in Redux.
 
+> npm install redux-subs
+
 ## What is a subscription?
 
 ```javascript
