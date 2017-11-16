@@ -1,6 +1,6 @@
 {
   "name": "redux-subs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "elm subscriptions in redux",
   "main": "target/index.js",
   "files": [
