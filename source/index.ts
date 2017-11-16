@@ -1,29 +1,27 @@
-type Constant<A> = () => A;
-type Mapper<A, B> = (a: A) => B;
-type Consumer<A> = (a: A) => void;
+export type Dispatch<Action> = (a: Action) => void;
+export type Next<Action> = (a: Action) => Action;
+export type GetState<State> = () => State;
 
-type Enable<A> = Consumer<A>;
-type Disable = Constant<void>;
-type Sub<A> = Mapper<Enable<A>, Disable>;
-type Subs<A, B> = Mapper<A, CurrentSubs<B>>;
+export interface Store<Action, State> {
+	dispatch: Dispatch<Action>;
+	getState: GetState<State>;
+}
 
-interface ActiveSubs {
+export type Disable = () => void;
+export type Enable<Action> = (d: Dispatch<Action>) => Disable;
+export type GetSubs<Action, State> = (s: State) => CurrentSubs<Action>;
+
+export interface ActiveSubs {
 	[id: string]: Disable;
 }
-interface CurrentSubs<A> {
-	[id: string]: Sub<A>;
-}
-
-type Next<Action> = Mapper<Action, Action>;
-interface Store<State, Action> {
-	dispatch: Consumer<Action>;
-	getState: Constant<State>;
+export interface CurrentSubs<Action> {
+	[id: string]: Enable<Action>;
 }
 
 export default
 	<State, Action>
-	(subs: Subs<State, Action>) =>
-	({dispatch, getState}: Store<State, Action>) =>
+	(subs: GetSubs<Action, State>) =>
+	({dispatch, getState}: Store<Action, State>) =>
 	(next: Next<Action>) => {
 	const enabling = new Set();
 	const disabling = new Set();

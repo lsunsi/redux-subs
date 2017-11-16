@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "outDir": "target",
     "rootDir": "source",
+    "declaration": true,
     "strict": true
   }
 }
