@@ -29,6 +29,8 @@
     "typescript": "^2.6.1"
   },
   "devDependencies": {
+    "ava": "^0.23.0",
+    "redux": "^3.7.2",
     "tslint": "^5.8.0",
     "tslint-xo": "^0.3.0"
   }
