@@ -25,32 +25,45 @@ export default
 	(subs: Subs<State, Action>) =>
 	({dispatch, getState}: Store<State, Action>) =>
 	(next: Next<Action>) => {
+	const enabling = new Set();
+	const disabling = new Set();
 	const activeSubs: ActiveSubs = {};
-
-	const subscribing = () => {
-		throw new Error('subscribing');
-	};
 
 	return (action: Action) => {
 		const a = next(action);
-
+		const myEnabling = new Set();
+		const myDisabling = new Set();
 		const currentSubs = subs(getState());
 
+		// Setting up markers
 		Object.keys(activeSubs).forEach(id => {
 			if (currentSubs[id]) {
 				delete currentSubs[id];
-			} else {
-				activeSubs[id]();
-				delete activeSubs[id];
+			} else if (!disabling.has(id)) {
+				myDisabling.add(id);
+				disabling.add(id);
 			}
 		});
 
 		Object.keys(currentSubs).forEach(id => {
-			activeSubs[id] = subscribing;
+			if (!enabling.has(id)) {
+				myEnabling.add(id);
+				enabling.add(id);
+			}
 		});
 
-		Object.keys(currentSubs).forEach(id => {
+		// Processing markers
+		myDisabling.forEach(id => {
+			activeSubs[id]();
+			delete activeSubs[id];
+			myDisabling.delete(id);
+			disabling.delete(id);
+		});
+
+		myEnabling.forEach(id => {
 			activeSubs[id] = currentSubs[id](dispatch);
+			myEnabling.delete(id);
+			enabling.delete(id);
 		});
 
 		return a;
