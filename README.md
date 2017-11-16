@@ -1,28 +1,38 @@
 # redux-subs
-elm subscriptions in redux
+This package implements the declarative [Subscriptions pattern](https://www.elm-tutorial.org/en/03-subs-cmds/01-subs.html) seen in the [Elm architecture](https://guide.elm-lang.org/architecture/) to be used in Redux.
 
-## Interface
+## What is a subscription?
 
 ```javascript
-/* How to use */
+const sub = dispatch => {
+  // setup and start
+  const socket = new Socket()
 
-import createSubs from 'redux-subs'
+  // dispatch at will
+  socket.on('message', data =>
+    dispatch({type: 'MESSAGE', payload: data})
+  )
 
-import {createStore, applyMiddleware} from 'redux'
-import subscriptions from './subscriptions'
-import reducer from './reducer'
-
-const subs = createSubs(subscriptions)
-const store = createStore(reducer, applyMiddleware(subs))
-
-/* Definitions */
-
-type Sub<A, B> = {
-  [string, (A => ()) => (() => ())]
-  identifier: string,
-  enable: (A => ()) => B,
-  disable: B => ()
+  // return a way to stop
+  return () => socket.close()
 }
-
-/**/
 ```
+
+## How to declare them?
+```javascript
+// declarative subscriptions
+const subs = state =>
+  state === 'listening' ?
+    {socket: sub} :
+    {}
+```
+
+## How do I start?
+```javascript
+import install from 'redux-subs'
+import {createStore, applyMiddleware} from 'redux'
+
+const store = createStore(reducer, install(subs))
+```
+
+## (:
