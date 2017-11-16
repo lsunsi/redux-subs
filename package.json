@@ -2,7 +2,10 @@
   "name": "redux-subs",
   "version": "0.1.0",
   "description": "elm subscriptions in redux",
-  "main": "source/index.ts",
+  "main": "target/index.js",
+  "files": [
+    "target/*"
+  ],
   "scripts": {
     "test": "ava",
     "build": "tsc",
