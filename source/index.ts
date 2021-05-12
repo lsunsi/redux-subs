@@ -6,10 +6,6 @@ export type GetSubs<D extends Dispatch, State> = (s: State) => CurrentSubs<D>;
 
 export type CurrentSubs<D extends Dispatch> = Record<string, Enable<D> | undefined>;
 
-function disablePlaceholder() {
-	// Placeholder to "mark" a subscription before it activates
-}
-
 const install = <State, D extends Dispatch>
 (subs: GetSubs<D, State>): Middleware<Record<string, unknown>, State, D> =>
 	({dispatch, getState}) =>
@@ -29,8 +25,17 @@ const install = <State, D extends Dispatch>
 						activeSubs.delete(id);
 						disabler();
 					} else if (!disabler && enabler) {
-						activeSubs.set(id, disablePlaceholder);
-						activeSubs.set(id, enabler(dispatch));
+						let disabled = false;
+						activeSubs.set(id, () => {
+							disabled = true;
+						});
+						const nextDisabler = enabler(dispatch);
+						// Handles the case where a subscription cancels itself
+						if (disabled) {
+							nextDisabler();
+						} else {
+							activeSubs.set(id, nextDisabler);
+						}
 					}
 				}
 

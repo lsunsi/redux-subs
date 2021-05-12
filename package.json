@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/lsunsi/redux-subs#readme",
   "devDependencies": {
+    "@reduxjs/toolkit": "^1.5.1",
     "ava": "^3.15.0",
     "redux": "^4.1.0",
     "ts-node": "^9.1.1",

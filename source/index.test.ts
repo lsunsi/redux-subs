@@ -1,5 +1,6 @@
-import test from 'ava';
-import {createStore, applyMiddleware, Dispatch, Action, Reducer, Middleware} from 'redux';
+import test, {ExecutionContext} from 'ava';
+import {createStore, applyMiddleware, Dispatch, Action, Reducer, Middleware, AnyAction} from 'redux';
+import {createAsyncThunk, configureStore, createSlice, ThunkDispatch} from '@reduxjs/toolkit';
 import install from '.';
 
 const validStates = <const>['init', 'sub0', 'sub1', 'sub2', 'sub3'];
@@ -27,9 +28,22 @@ function isStateAction(type: ActionType): type is States {
 	return validStates.includes(type as States);
 }
 
-test('middleware', t => {
-	const receivedActions: ActionType[] = [];
+function createSpyMiddleware<S>(t: ExecutionContext, expectations: string[]) {
+	const receivedActions: string[] = [];
+	const spy: Middleware<DispatchExt, S> = _ => next => action => {
+		const {type} = action as Action<string>;
+		receivedActions.push(type);
+		return next(action);
+	};
 
+	const assert = () => {
+		t.deepEqual(receivedActions, expectations);
+	};
+
+	return {spy, assert};
+}
+
+test('middleware', t => {
 	const actions: TestAction[] = [
 		{type: 'init'},
 		{type: 'sub0'},
@@ -81,11 +95,7 @@ test('middleware', t => {
 		}
 	};
 
-	const spy: Middleware<DispatchExt, State, TestDispatch> = _ => next => action => {
-		const {type} = action as TestAction;
-		receivedActions.push(type);
-		return next(action);
-	};
+	const {spy, assert} = createSpyMiddleware(t, expectations);
 
 	const store = createStore(reducer,
 		applyMiddleware(spy, install(subs))
@@ -94,5 +104,57 @@ test('middleware', t => {
 		store.dispatch(action);
 	}
 
-	t.deepEqual(receivedActions, expectations);
+	assert();
+});
+
+test.cb('createAsyncThunk helper', t => {
+	let promise: Promise<any> = Promise.resolve();
+	const thunk = createAsyncThunk('testThunk', () => {
+		// Placeholder
+	});
+
+	const validStates = ['init', 'pending', 'rejected'];
+	type States = (typeof validStates)[number];
+
+	const {reducer} = createSlice({
+		name: 'states',
+		initialState: 'init' as States,
+		reducers: {},
+		extraReducers: builder => builder
+			.addCase(thunk.pending, () => 'pending')
+			.addCase(thunk.rejected, () => 'rejected')
+	});
+
+	const sub1 = (dispatch: ThunkDispatch<States, unknown, AnyAction>) => {
+		const api = dispatch(thunk());
+		promise = api;
+		return () => {
+			api.abort();
+		};
+	};
+
+	const subs = (state: States) => {
+		const nextSubs = (state === 'init') ? {sub1} : {};
+		return nextSubs;
+	};
+
+	const initAction = {type: 'any'};
+
+	const {spy, assert} = createSpyMiddleware(t, [initAction.type, thunk.pending.type, thunk.rejected.type]);
+
+	const store = configureStore({
+		reducer,
+		middleware: getDefaultMiddleware => getDefaultMiddleware().concat(install(subs), spy)
+	});
+
+	store.dispatch(initAction);
+
+	const end = () => {
+		assert();
+		t.end();
+	};
+
+	promise.then(end, () => {
+		t.fail();
+	});
 });
