@@ -1,69 +1,46 @@
-export type Dispatch<Action> = (a: Action) => void;
-export type Next<Action> = (a: Action) => Action;
-export type GetState<State> = () => State;
-
-export interface Store<Action, State> {
-	dispatch: Dispatch<Action>;
-	getState: GetState<State>;
-}
+import {Middleware, Dispatch} from 'redux';
 
 export type Disable = () => void;
-export type Enable<Action> = (d: Dispatch<Action>) => Disable;
-export type GetSubs<Action, State> = (s: State) => CurrentSubs<Action>;
+export type Enable<D extends Dispatch> = (d: D) => Disable;
+export type GetSubs<D extends Dispatch, State> = (s: State) => CurrentSubs<D>;
 
-export interface ActiveSubs {
-	[id: string]: Disable;
-}
-export interface CurrentSubs<Action> {
-	[id: string]: Enable<Action>;
-}
+export type CurrentSubs<D extends Dispatch> = Record<string, Enable<D> | undefined>;
 
-export default
-	<State, Action>
-	(subs: GetSubs<Action, State>) =>
-	({dispatch, getState}: Store<Action, State>) =>
-	(next: Next<Action>) => {
-	const enabling = new Set();
-	const disabling = new Set();
-	const activeSubs: ActiveSubs = {};
+const install = <State, D extends Dispatch>
+(subs: GetSubs<D, State>): Middleware<Record<string, unknown>, State, D> =>
+	({dispatch, getState}) =>
+		next => {
+			const activeSubs = new Map<string, Disable>();
+			return action => {
+				const a = next(action);
+				const state = getState();
+				const currentSubs = subs(state);
 
-	return (action: Action) => {
-		const a = next(action);
-		const myEnabling = new Set();
-		const myDisabling = new Set();
-		const currentSubs = subs(getState());
+				const keys = [...activeSubs.keys(), ...Object.keys(currentSubs)];
 
-		// Setting up markers
-		Object.keys(activeSubs).forEach(id => {
-			if (currentSubs[id]) {
-				delete currentSubs[id];
-			} else if (!disabling.has(id)) {
-				myDisabling.add(id);
-				disabling.add(id);
-			}
-		});
+				for (const id of keys) {
+					const enabler = currentSubs[id];
+					const disabler = activeSubs.get(id);
+					if (!enabler && disabler) {
+						activeSubs.delete(id);
+						disabler();
+					} else if (!disabler && enabler) {
+						let disabled = false;
+						activeSubs.set(id, () => {
+							disabled = true;
+						});
+						const nextDisabler = enabler(dispatch);
+						// Handles the case where a subscription cancels itself
+						if (disabled) {
+							nextDisabler();
+						} else {
+							activeSubs.set(id, nextDisabler);
+						}
+					}
+				}
 
-		Object.keys(currentSubs).forEach(id => {
-			if (!enabling.has(id)) {
-				myEnabling.add(id);
-				enabling.add(id);
-			}
-		});
+				return a;
+			};
+		};
 
-		// Processing markers
-		myDisabling.forEach(id => {
-			activeSubs[id]();
-			delete activeSubs[id];
-			myDisabling.delete(id);
-			disabling.delete(id);
-		});
-
-		myEnabling.forEach(id => {
-			activeSubs[id] = currentSubs[id](dispatch);
-			myEnabling.delete(id);
-			enabling.delete(id);
-		});
-
-		return a;
-	};
-};
+export default install;
